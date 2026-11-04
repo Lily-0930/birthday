@@ -231,6 +231,16 @@
     .letter-body p{font-size:16px;line-height:34px}
   }
 
+
+  /* ---------- 微信内打开提示 ---------- */
+  #wxTip{position:fixed;left:50%;transform:translateX(-50%);top:8px;z-index:120;display:none;
+    align-items:center;gap:10px;max-width:92vw;padding:8px 14px;border-radius:20px;
+    background:rgba(43,30,18,.86);color:#F3E3C6;font-size:11.5px;letter-spacing:.04em;
+    box-shadow:0 8px 20px -10px rgba(0,0,0,.6);backdrop-filter:blur(6px)}
+  #wxTip.show{display:flex}
+  #wxTip b{font-weight:500;color:#E8B96F}
+  #wxTip i{font-style:normal;opacity:.55;cursor:pointer;padding:0 2px}
+
   /* ---------- 音乐 ---------- */
   #mute{position:fixed;right:12px;top:52px;z-index:70;width:34px;height:34px;border-radius:50%;
     border:1px solid rgba(181,97,62,.28);background:rgba(255,251,242,.9);color:#A9825C;
@@ -414,6 +424,7 @@
   <textarea id="syncOut" readonly></textarea>
 </div>
 
+<div id="wxTip"><span>若声音或动画不完整，点右上角「···」选<b>在浏览器打开</b></span><i id="wxTipX">✕</i></div>
 <button id="mute" title="音乐">♪</button>
 <audio id="bgm" src="bgm.m4a" loop preload="none"></audio>
 
@@ -795,6 +806,18 @@ const LYR = [
   }
   if('requestIdleCallback' in window) requestIdleCallback(warm, {timeout: 2500});
   else setTimeout(warm, 1500);
+})();
+
+
+/* ---------- 微信内提示 ---------- */
+(function(){
+  const ua = navigator.userAgent || '';
+  if(ua.indexOf('MicroMessenger') === -1) return;
+  const t = document.getElementById('wxTip');
+  if(!t) return;
+  t.classList.add('show');
+  document.getElementById('wxTipX').onclick = function(){ t.classList.remove('show'); };
+  setTimeout(function(){ t.classList.add('hide'); t.style.opacity='0'; }, 9000);
 })();
 
 /* ---------- 信纸逐行浮现 ---------- */
