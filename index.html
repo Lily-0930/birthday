@@ -243,17 +243,6 @@
     box-shadow:0 4px 12px -6px rgba(90,58,30,.5)}
   #mute.off{opacity:.5}
 
-  /* ---------- 竖屏提示 ---------- */
-  #rotate{position:fixed;inset:0;z-index:99;display:none;place-items:center;
-    background:linear-gradient(160deg,#F8EEDB,#EBD5B8);text-align:center;padding:30px}
-  #rotate.show{display:grid}
-  #rotate .ico{width:64px;height:64px;margin:0 auto 20px;border:2.5px solid #C08A5E;border-radius:12px;
-    position:relative;animation:turn 3s ease-in-out infinite}
-  @keyframes turn{0%,40%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
-  #rotate h3{margin:0 0 8px;font-size:17px;color:#6B4A2E;letter-spacing:.06em}
-  #rotate p{margin:0;font-size:12.5px;color:#9A7E5E;line-height:1.9;letter-spacing:.04em}
-  #rotate .ok{margin-top:22px;display:inline-block;font-size:12px;color:#A9825C;
-    border:1px solid rgba(169,130,92,.4);border-radius:20px;padding:7px 18px;cursor:pointer}
 
 
   /* ---------- 信 / 留言板 / 结尾 ---------- */
@@ -449,16 +438,8 @@
 </div>
 
 <button id="mute" title="音乐">♪</button>
-<audio id="bgm" src="bgm.mp3" loop preload="metadata"></audio>
+<audio id="bgm" src="bgm.m4a" loop preload="none"></audio>
 
-<div id="rotate">
-  <div>
-    <div class="ico"></div>
-    <h3>把手机横过来</h3>
-    <p>房间是横着画的，横屏看会清楚很多。<br>转一下就好，我等你。</p>
-    <span class="ok" id="rotOk">就这样竖着看</span>
-  </div>
-</div>
 
 <script>
 
@@ -745,23 +726,12 @@ const LYR = [
   }, 400);
 })();
 
-/* 竖屏提示 */
-const rot = document.getElementById('rotate');
-function checkOrient(){
-  const portrait = window.innerHeight > window.innerWidth;
-  const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  if(portrait && touch && !sessionStorage.getItem('rotSkip')) rot.classList.add('show');
-  else rot.classList.remove('show');
-}
-document.getElementById('rotOk').onclick = function(){
-  sessionStorage.setItem('rotSkip','1'); rot.classList.remove('show');
-};
-
 /* ---------- 留言板 ---------- */
 (function(){
-  const KEY='bday-notes-v1';
-  const seeded=[{n:'琳琳',t:'生日快乐呀，明年还要一起出去玩。'},{n:'一旸',t:'饭搭子，24 岁也要好好吃饭。'}];
-  function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||seeded; }catch(e){ return seeded; } }
+  const KEY='bday-notes-v2';
+  // 收件地址：替换成你的邮箱后，所有人的留言都会直接发到邮箱
+  const ENDPOINT='https://formsubmit.co/ajax/__EMAIL__';
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return []; } }
   function save(a){ try{ localStorage.setItem(KEY,JSON.stringify(a)); }catch(e){} }
   function render(){
     const box=document.getElementById('notes'), empty=document.getElementById('bEmpty');
@@ -771,17 +741,34 @@ document.getElementById('rotOk').onclick = function(){
     empty.style.display='none';
     arr.slice().reverse().forEach(function(m){
       const d=document.createElement('div'); d.className='note';
-      d.innerHTML='<div class="nm">'+m.n+'</div><div class="tx">'+m.t.replace(/[<>]/g,'')+'</div>';
+      if(m.pending) d.style.opacity='.55';
+      d.innerHTML='<div class="nm">'+m.n.replace(/[<>]/g,'')+'</div><div class="tx">'+m.t.replace(/[<>]/g,'')+'</div>';
       box.appendChild(d);
     });
   }
   document.getElementById('bSend').addEventListener('click',function(){
-    const n=document.getElementById('bName').value.trim()||'一个朋友';
-    const t=document.getElementById('bText').value.trim();
+    const nm=document.getElementById('bName'), tx=document.getElementById('bText'), btn=this;
+    const n=nm.value.trim()||'一个朋友';
+    const t=tx.value.trim();
     if(!t) return;
-    const arr=load(); arr.push({n:n,t:t}); save(arr);
-    document.getElementById('bText').value='';
-    render();
+    btn.disabled=true; btn.textContent='正在贴上…';
+    const arr=load(); const item={n:n,t:t,pending:true,ts:Date.now()};
+    arr.push(item); save(arr); render();
+
+    fetch(ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({name:n, message:t, _subject:'「一间只属于我的房间」新留言 · '+n,
+                           _template:'table', 页面:location.href, 时间:new Date().toLocaleString()})
+    }).then(function(r){ return r.json(); }).then(function(){
+      item.pending=false; save(arr); render();
+      btn.textContent='贴上去了'; tx.value='';
+      setTimeout(function(){ btn.disabled=false; btn.textContent='贴上去'; }, 1800);
+    }).catch(function(){
+      item.pending=false; save(arr); render();
+      btn.textContent='先存你这儿了'; tx.value='';
+      setTimeout(function(){ btn.disabled=false; btn.textContent='贴上去'; }, 2200);
+    });
   });
   render();
 })();
@@ -943,8 +930,6 @@ document.getElementById('rotOk').onclick = function(){
   });
 })();
 
-window.addEventListener('resize', checkOrient);
-checkOrient();
 </script>
 </body>
 </html>
