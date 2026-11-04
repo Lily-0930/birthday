@@ -353,7 +353,7 @@
 <section class="screen" id="s-room">
   <div id="stagewrap">
     <div id="stage">
-      <img id="room" src="style-v2/room-final4.png" alt="房间">
+      <img id="room" src="style-v2/room-final4.jpg" alt="房间">
       <div id="head"><img src="objects/head.png" alt=""></div>
       <div class="motes" id="motes"></div>
     </div>
@@ -363,7 +363,7 @@
     <div id="sheet">
       <div id="placeholder">一间只属于我的房间</div>
       <div id="card" style="display:none">
-        <div class="shot" id="cShot"><img id="cImg" alt=""><div class="ph" id="cPh"><span>🖼</span>这张回忆的照片待补上</div></div>
+        <div class="shot" id="cShot"><img id="cImg" alt=""><div class="ph" id="cPh"><span>🖼</span><em id="cPhTxt">照片载入中…</em></div></div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px">
           <span class="chip" id="cDate"></span>
           <span id="cX" style="cursor:pointer;font-size:16px;line-height:1;color:#B99B78;padding:2px 4px">×</span>
@@ -623,11 +623,15 @@ function open(it){
   document.getElementById('cX').style.visibility = 'visible';
   SFX.play(it.id);
   const img = document.getElementById('cImg'), ph = document.getElementById('cPh');
+  const phTxt = document.getElementById('cPhTxt');
   img.style.display='none'; ph.style.display='flex';
+  if(phTxt) phTxt.textContent = '照片载入中…';
   if(it.photo){
     img.onload = function(){ img.style.display='block'; ph.style.display='none'; };
-    img.onerror = function(){ img.style.display='none'; ph.style.display='flex'; };
+    img.onerror = function(){ img.style.display='none'; ph.style.display='flex';
+      if(phTxt) phTxt.textContent='这张回忆的照片待补上'; };
     img.src = it.photo;
+    if(img.complete && img.naturalWidth){ img.style.display='block'; ph.style.display='none'; }
   }
 }
 
@@ -866,6 +870,21 @@ document.getElementById('rotOk').onclick = function(){
   setInterval(function(){ if(wrap.classList.contains('on') && i < LYR.length){ cnt.textContent = '第 ' + (i+1) + ' / ' + LYR.length + ' 句　·　' + fmt(audio.currentTime); } }, 300);
 })();
 
+
+
+/* ---------- 照片预加载：打开卡片不再等 ---------- */
+(function(){
+  function warm(){
+    ITEMS.forEach(function(it){
+      if(!it.photo) return;
+      var im = new Image();
+      im.decoding = 'async';
+      im.src = it.photo;
+    });
+  }
+  if('requestIdleCallback' in window) requestIdleCallback(warm, {timeout: 2500});
+  else setTimeout(warm, 1500);
+})();
 
 /* ---------- 信纸逐行浮现 ---------- */
 (function(){
