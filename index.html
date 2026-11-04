@@ -121,7 +121,6 @@
     88%{transform:rotate(1deg) translate(0,1px)}
   }
 
-
   /* ---------- 右侧文案 ---------- */
   #panel{flex:0 0 clamp(268px, 33vw, 400px);height:100%;display:flex;align-items:stretch}
   #sheet{width:100%;height:100%;overflow-y:auto;
@@ -146,7 +145,6 @@
   .back{margin-top:14px;flex:0 0 auto;align-self:flex-start;display:inline-block;font-size:11.5px;color:#A9825C;
     border:1px solid rgba(169,130,92,.35);border-radius:20px;padding:6px 14px;cursor:pointer;transition:.2s}
   .back:hover{border-color:rgba(169,130,92,.7);color:#8A6642}
-
 
   /* ---------- 开场 · 划亮蜡烛 ---------- */
   #intro{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;
@@ -188,7 +186,6 @@
   #intro .hint{font-size:12px;letter-spacing:.28em;color:#B08A60;height:18px}
   #intro .hint.lit{color:#E3A857}
 
-
   /* ---------- 歌词对时工具 ---------- */
   #syncBtn{position:fixed;right:12px;bottom:10px;z-index:75;font-size:10.5px;letter-spacing:.08em;
     color:#A9825C;background:rgba(255,251,242,.85);border:1px solid rgba(181,97,62,.25);
@@ -208,8 +205,6 @@
   #sync .tip{font-size:11.5px;color:#8E7355;letter-spacing:.08em;line-height:1.9;max-width:560px}
   #sync textarea{display:none;width:min(680px,90vw);height:120px;font-size:10.5px;background:#1c1409;
     color:#C7AE87;border:1px solid rgba(169,130,92,.3);border-radius:8px;padding:8px}
-
-
 
   @font-face{font-family:'LetterHand';src:url('fonts/letter.ttf') format('truetype');font-display:swap}
   /* ---------- 信纸 ---------- */
@@ -243,9 +238,7 @@
     box-shadow:0 4px 12px -6px rgba(90,58,30,.5)}
   #mute.off{opacity:.5}
 
-
-
-  /* ---------- 信 / 留言板 / 结尾 ---------- */
+  /* ---------- 信 / 结尾 ---------- */
   .paper{width:100%;max-width:720px;margin:0 auto;background:linear-gradient(180deg,#FFFBF2,#FADFC0);
     border-radius:18px;padding:26px 28px 24px;
     box-shadow:0 24px 48px -26px rgba(90,58,30,.5), 0 0 0 1px rgba(181,97,62,.10) inset;
@@ -286,7 +279,6 @@
   .confetti{position:fixed;top:-14px;z-index:95;pointer-events:none;border-radius:2px}
   @keyframes fall{to{transform:translateY(112vh) rotate(680deg);opacity:.9}}
 
-
   /* ---------- 手机横屏（矮屏）适配 ---------- */
   @media (max-height: 520px){
     #app{padding:44px 10px 0}
@@ -314,7 +306,6 @@
 </style>
 </head>
 <body>
-
 
 <div id="intro">
   <div class="date serif">2026 · 11 · 04</div>
@@ -380,19 +371,6 @@
   </div>
 </section>
 
-<section class="screen" id="s-board">
-  <div class="paper">
-    <b class="eyebrow">如果你想给我留言</b>
-    <h2 class="serif">它会留在这间屋子里</h2>
-    <div class="form">
-      <input id="bName" maxlength="12" placeholder="你的名字">
-      <textarea id="bText" maxlength="120" rows="3" placeholder="想说的话……"></textarea>
-      <button id="bSend">贴上去</button>
-    </div>
-    <div class="notes" id="notes"><div class="empty" id="bEmpty">还没有人留言，第一个吧～</div></div>
-  </div>
-</section>
-
 <section class="screen" id="s-finale">
   <div class="finale">
     <b class="eyebrow">最后，吹蜡烛吧</b>
@@ -422,7 +400,6 @@
 
 </div>
 
-
 <button id="syncBtn">⚙︎ 对歌词</button>
 <div id="sync">
   <div class="cnt" id="syncCnt"></div>
@@ -439,7 +416,6 @@
 
 <button id="mute" title="音乐">♪</button>
 <audio id="bgm" src="bgm.m4a" loop preload="none"></audio>
-
 
 <script>
 
@@ -583,7 +559,6 @@ let current = null;
 ITEMS.forEach(function(it){
   const [x,y,w,h] = it.rect;
 
-
   const spot = document.createElement('div');
   spot.className='spot';
   spot.style.cssText='left:'+pct(x,IMG_W)+';top:'+pct(y,IMG_H)+';width:'+pct(w,IMG_W)+';height:'+pct(h,IMG_H);
@@ -591,7 +566,6 @@ ITEMS.forEach(function(it){
   spot.onclick = function(e){ e.stopPropagation(); open(it); };
   stage.appendChild(spot);
 });
-
 
 function open(it){
   if(current) close(true);
@@ -726,53 +700,6 @@ const LYR = [
   }, 400);
 })();
 
-/* ---------- 留言板 ---------- */
-(function(){
-  const KEY='bday-notes-v2';
-  // 收件地址：替换成你的邮箱后，所有人的留言都会直接发到邮箱
-  const ENDPOINT='https://formsubmit.co/ajax/__EMAIL__';
-  function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return []; } }
-  function save(a){ try{ localStorage.setItem(KEY,JSON.stringify(a)); }catch(e){} }
-  function render(){
-    const box=document.getElementById('notes'), empty=document.getElementById('bEmpty');
-    const arr=load();
-    [...box.querySelectorAll('.note')].forEach(n=>n.remove());
-    if(!arr.length){ empty.style.display='block'; return; }
-    empty.style.display='none';
-    arr.slice().reverse().forEach(function(m){
-      const d=document.createElement('div'); d.className='note';
-      if(m.pending) d.style.opacity='.55';
-      d.innerHTML='<div class="nm">'+m.n.replace(/[<>]/g,'')+'</div><div class="tx">'+m.t.replace(/[<>]/g,'')+'</div>';
-      box.appendChild(d);
-    });
-  }
-  document.getElementById('bSend').addEventListener('click',function(){
-    const nm=document.getElementById('bName'), tx=document.getElementById('bText'), btn=this;
-    const n=nm.value.trim()||'一个朋友';
-    const t=tx.value.trim();
-    if(!t) return;
-    btn.disabled=true; btn.textContent='正在贴上…';
-    const arr=load(); const item={n:n,t:t,pending:true,ts:Date.now()};
-    arr.push(item); save(arr); render();
-
-    fetch(ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify({name:n, message:t, _subject:'「一间只属于我的房间」新留言 · '+n,
-                           _template:'table', 页面:location.href, 时间:new Date().toLocaleString()})
-    }).then(function(r){ return r.json(); }).then(function(){
-      item.pending=false; save(arr); render();
-      btn.textContent='贴上去了'; tx.value='';
-      setTimeout(function(){ btn.disabled=false; btn.textContent='贴上去'; }, 1800);
-    }).catch(function(){
-      item.pending=false; save(arr); render();
-      btn.textContent='先存你这儿了'; tx.value='';
-      setTimeout(function(){ btn.disabled=false; btn.textContent='贴上去'; }, 2200);
-    });
-  });
-  render();
-})();
-
 /* ---------- 吹蜡烛 ---------- */
 (function(){
   const btn=document.getElementById('blow'), flame=document.getElementById('flame'),
@@ -802,8 +729,6 @@ const LYR = [
   btn.addEventListener('pointerup',stop);
   btn.addEventListener('pointerleave',stop);
 })();
-
-
 
 /* ---------- 歌词对时 ---------- */
 (function(){
@@ -856,8 +781,6 @@ const LYR = [
   document.getElementById('syncStop').onclick = function(){ wrap.classList.remove('on'); };
   setInterval(function(){ if(wrap.classList.contains('on') && i < LYR.length){ cnt.textContent = '第 ' + (i+1) + ' / ' + LYR.length + ' 句　·　' + fmt(audio.currentTime); } }, 300);
 })();
-
-
 
 /* ---------- 照片预加载：打开卡片不再等 ---------- */
 (function(){
